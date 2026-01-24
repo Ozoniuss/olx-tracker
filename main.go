@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -80,4 +81,24 @@ func (c *Client) GetAdvert(ctx context.Context, advertID int) (*Advert, error) {
 	}
 
 	return &parsed.Data, nil
+}
+
+func main() {
+	// still sample. test HTTPS in container
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Get("https://api.github.com")
+	if err != nil {
+		panic(err) // TLS / cert errors usually show up here
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	fmt.Println("Status:", resp.Status)
+	fmt.Println("Body length:", len(body))
+
+	fmt.Println("body: ", string(body))
 }
