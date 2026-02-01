@@ -1,0 +1,38 @@
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Mouse gaming Logitech Pro  X Superlight",
+    "image": [
+        "https://frankfurt.apollo.olxcdn.com:443/v1/files/4kojegzyml4a2-RO/image",
+        "https://frankfurt.apollo.olxcdn.com:443/v1/files/xevqryxi6vtj2-RO/image",
+        "https://frankfurt.apollo.olxcdn.com:443/v1/files/aexno73icg1t1-RO/image",
+        "https://frankfurt.apollo.olxcdn.com:443/v1/files/heqaentbfwe51-RO/image",
+        "https://frankfurt.apollo.olxcdn.com:443/v1/files/pqk6kg75ggwm-RO/image"
+    ],
+    "url": "https://www.olx.ro/d/oferta/mouse-gaming-logitech-pro-x-superlight-IDkbEDA.html",
+    "description": "Pret FIX / Fara Schimburi !! Sub pretul meu gasiti forjate,folosite mult cu skate-uri schimbate ..etc Vand mouse gaming Logitech G PRO X Superlight ca Nou,testat cateva zile Full Box ,cutie cu toate accesoriile Senzor Hero 25K -25000Dpi Greutate 63 grame Mouse-ul lui Donk Cs2 cel mai bun aimer Pret magazine :550lei-600lei + Predare Metrou Piata Sudului /Brancoveanu",
+    "category": "https://www.olx.ro/electronice-si-electrocasnice/periferice-si-accesorii-laptop-pc-gaming/mouse-si-mousepad/mouse-gaming/",
+    "sku": "298304542",
+    "offers": {
+        "@type": "Offer",
+        "availability": "https://schema.org/InStock",
+        "areaServed": {
+            "@type": "AdministrativeArea",
+            "name": "Sectorul 4"
+        },
+        "priceCurrency": "RON",
+        "price": 449,
+        "shippingDetails": {
+            "@type": "OfferShippingDetails",
+            "shippingRate": {
+                "@type": "MonetaryAmount",
+                "currency": "RON"
+            },
+            "shippingDestination": {
+                "@type": "DefinedRegion",
+                "addressCountry": "RO"
+            }
+        },
+        "itemCondition": "https://schema.org/NewCondition"
+    }
+}

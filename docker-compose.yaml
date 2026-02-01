@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  migratedb:
+    image: migrate/migrate:v4.18.2
+    container_name: olxtracker_migrate_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations/:/migrations
+    command: >
+      -path /migrations/
+      -database "postgres://${OLXTRACKER_POSTGRES_USER}:${OLXTRACKER_POSTGRES_PASSWORD}@olxtracker_postgres/${OLXTRACKER_POSTGRES_DATABASE}?sslmode=disable&search_path=${OLXTRACKER_POSTGRES_SCHEMA}"
+      up
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: olxtracker_postgres
+    environment:
+      POSTGRES_USER: ${OLXTRACKER_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${OLXTRACKER_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${OLXTRACKER_POSTGRES_DATABASE}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${OLXTRACKER_POSTGRES_USER} -d ${OLXTRACKER_POSTGRES_DATABASE}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: olxtracker-app
+  #   env_file: ./.env
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
