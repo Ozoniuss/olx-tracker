@@ -21,29 +21,6 @@ func TestBaseRepositoryTestSuite(t *testing.T) {
 	suite.Run(t, new(BaseRepositoryTestSuite))
 }
 
-func (s *BaseRepositoryTestSuite) TestNewUserAndGetUserID() {
-	ctx := context.Background()
-	username := "test-user"
-	password := "test-password"
-
-	createdUserID, err := NewUser(ctx, s.DB, username, password, false)
-	s.Require().NoError(err)
-	s.Require().NotEqual(uuid.Nil, createdUserID)
-	s.T().Logf("got user UUID: %v", createdUserID)
-
-	retrievedUserID, err := GetUserID(ctx, s.DB, username, password)
-	s.Require().NoError(err)
-	s.Equal(createdUserID, retrievedUserID)
-
-	_, err = NewUser(ctx, s.DB, username, password, false)
-	s.Require().Error(err)
-	s.ErrorIs(err, ErrAlreadyExists)
-
-	_, err = GetUserID(ctx, s.DB, "invalid-user", "invalid-password")
-	s.Require().Error(err)
-	s.ErrorIs(err, ErrNotFound)
-}
-
 func (s *BaseRepositoryTestSuite) SetupSuite() {
 	if os.Getenv("RUN_INTEGRATION_TESTS") != "true" {
 		s.T().Skip("Skipping integration tests. Set RUN_INTEGRATION_TESTS=true to run them.")
@@ -74,6 +51,61 @@ func (s *BaseRepositoryTestSuite) TearDownSuite() {
 	if s.DB != nil {
 		s.DB.Close()
 	}
+}
+
+func (s *BaseRepositoryTestSuite) TestNewUserAndGetUserID() {
+	ctx := context.Background()
+	username := "test-user"
+	password := "test-password"
+
+	createdUserID, err := NewUser(ctx, s.DB, username, password, false)
+	s.Require().NoError(err)
+	s.Require().NotEqual(uuid.Nil, createdUserID)
+	s.T().Logf("got user UUID: %v", createdUserID)
+
+	retrievedUserID, err := GetUserID(ctx, s.DB, username, password)
+	s.Require().NoError(err)
+	s.Equal(createdUserID, retrievedUserID)
+
+	_, err = NewUser(ctx, s.DB, username, password, false)
+	s.Require().Error(err)
+	s.ErrorIs(err, ErrAlreadyExists)
+
+	_, err = GetUserID(ctx, s.DB, "invalid-user", "invalid-password")
+	s.Require().Error(err)
+	s.ErrorIs(err, ErrNotFound)
+}
+
+func (s *BaseRepositoryTestSuite) TestAddTracking() {
+	ctx := context.Background()
+
+	userID, err := NewUser(ctx, s.DB, "ads-user", "ads-password", false)
+	s.Require().NoError(err)
+	s.Require().NotEqual(uuid.Nil, userID)
+
+	ads := []string{
+		"https://example.com/ad-1",
+		"https://example.com/ad-2",
+		"https://example.com/ad-3",
+	}
+
+	for _, ad := range ads {
+		err = TrackAddForUser(ctx, s.DB, userID, ad)
+		s.Require().NoError(err)
+	}
+
+	tracked, err := ListTrackedProductsForUser(ctx, s.DB, userID)
+	s.Require().NoError(err)
+	s.Require().Len(tracked, len(ads))
+
+	for _, product := range tracked {
+		s.NotEqual(uuid.Nil, product.ID)
+	}
+
+	// ListTrackedProductsForUser returns newest first (created_at DESC).
+	expectedURLs := []string{ads[2], ads[1], ads[0]}
+	actualURLs := []string{tracked[0].URL, tracked[1].URL, tracked[2].URL}
+	s.Equal(expectedURLs, actualURLs)
 }
 
 func testDatabaseURL() string {
