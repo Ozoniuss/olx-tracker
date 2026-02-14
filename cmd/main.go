@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Ozoniuss/olx-tracker/config"
@@ -15,6 +16,9 @@ import (
 )
 
 func main() {
+
+	debug()
+	os.Exit(0)
 
 	c, err := config.LoadConfig()
 	if err != nil {
@@ -104,5 +108,34 @@ func main() {
 			rawjson,
 		)
 		fmt.Println("Stored snapshot for", product.URL)
+	}
+}
+
+func debug() {
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	ctx := context.Background()
+
+	ads := []string{
+		// `https://www.olx.ro/d/oferta/mouse-gaming-logitech-pro-x-superlight-IDkbEDA.html`,
+		// `https://www.olx.ro/d/oferta/motocicleta-ktm-790-duke-24-IDgV8Gy.html`,
+		// `https://www.olx.ro/d/oferta/inchiriere-apartament-2-camere-IDkdRuG.html`,
+		// `https://www.olx.ro/d/oferta/apple-magic-mouse-2-reincarcabil-port-lightning-sdasjasd.html`,
+		`https://www.olx.ro/d/oferta/apple-magic-mouse-2-reincarcabil-port-lightning-IDjTmhe.html`,
+	}
+
+	for _, ad := range ads {
+		product, err := productpkg.FetchProduct(
+			ctx,
+			client,
+			ad,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		productpkg.PrintRelevantProductInfo(product)
+
 	}
 }

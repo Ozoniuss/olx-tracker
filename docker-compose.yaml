@@ -3,7 +3,6 @@ version: "3.8"
 services:
   migratedb:
     image: migrate/migrate:v4.18.2
-    container_name: olxtracker_migrate_db
     depends_on:
       postgres:
         condition: service_healthy
@@ -11,12 +10,11 @@ services:
       - ./migrations/:/migrations
     command: >
       -path /migrations/
-      -database "postgres://${OLXTRACKER_POSTGRES_USER}:${OLXTRACKER_POSTGRES_PASSWORD}@olxtracker_postgres/${OLXTRACKER_POSTGRES_DATABASE}?sslmode=disable&search_path=${OLXTRACKER_POSTGRES_SCHEMA}"
+      -database "postgres://${OLXTRACKER_POSTGRES_USER}:${OLXTRACKER_POSTGRES_PASSWORD}@postgres/${OLXTRACKER_POSTGRES_DATABASE}?sslmode=disable&search_path=${OLXTRACKER_POSTGRES_SCHEMA}"
       up
 
   postgres:
     image: postgres:16-alpine
-    container_name: olxtracker_postgres
     environment:
       POSTGRES_USER: ${OLXTRACKER_POSTGRES_USER}
       POSTGRES_PASSWORD: ${OLXTRACKER_POSTGRES_PASSWORD}

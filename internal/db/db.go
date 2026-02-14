@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Ozoniuss/olx-tracker/config"
 	"github.com/google/uuid"
@@ -47,6 +48,19 @@ func ConnectToPostgres(ctx context.Context, dsn string) (*sql.DB, error) {
 type ProductWithUrl struct {
 	ID  uuid.UUID
 	URL string
+}
+
+type ProductSnapshot struct {
+	ID             uuid.UUID
+	ProductID      uuid.UUID
+	Version        int
+	RetrievedAt    time.Time
+	Name           string
+	Description    string
+	PriceSmallUnit int64
+	Currency       string
+	Availability   string
+	RawJSON        []byte
 }
 
 func ListTrackedProductsForUser(ctx context.Context, db *sql.DB, userID uuid.UUID) ([]ProductWithUrl, error) {
@@ -169,6 +183,65 @@ func StoreNextAddSnapshot(
 	}
 
 	return tx.Commit()
+}
+
+func ListAddSnapshotsForUser(
+	ctx context.Context,
+	db *sql.DB,
+	userID uuid.UUID,
+	productID uuid.UUID,
+) ([]ProductSnapshot, error) {
+	const query = `
+		SELECT
+			pv.id,
+			pv.product_id,
+			pv.version,
+			pv.retrieved_at,
+			pv.name,
+			pv.description,
+			pv.price_small_unit,
+			pv.currency,
+			pv.availability,
+			pv.raw_json
+		FROM products p
+		INNER JOIN product_versions pv
+			ON pv.product_id = p.id
+		WHERE p.user_id = $1 AND p.id = $2
+		ORDER BY pv.version DESC
+	`
+
+	rows, err := db.QueryContext(ctx, query, userID, productID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	var snapshots []ProductSnapshot
+	for rows.Next() {
+		var snapshot ProductSnapshot
+		if err := rows.Scan(
+			&snapshot.ID,
+			&snapshot.ProductID,
+			&snapshot.Version,
+			&snapshot.RetrievedAt,
+			&snapshot.Name,
+			&snapshot.Description,
+			&snapshot.PriceSmallUnit,
+			&snapshot.Currency,
+			&snapshot.Availability,
+			&snapshot.RawJSON,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		snapshots = append(snapshots, snapshot)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate rows: %w", err)
+	}
+
+	return snapshots, nil
 }
 
 func GetUserID(ctx context.Context, db *sql.DB, username, password string) (uuid.UUID, error) {
