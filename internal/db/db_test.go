@@ -1,11 +1,13 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 )
@@ -19,8 +21,27 @@ func TestBaseRepositoryTestSuite(t *testing.T) {
 	suite.Run(t, new(BaseRepositoryTestSuite))
 }
 
-func (s *BaseRepositoryTestSuite) TestAllGood() {
-	s.Equal(1, 2)
+func (s *BaseRepositoryTestSuite) TestNewUserAndGetUserID() {
+	ctx := context.Background()
+	username := "test-user"
+	password := "test-password"
+
+	createdUserID, err := NewUser(ctx, s.DB, username, password, false)
+	s.Require().NoError(err)
+	s.Require().NotEqual(uuid.Nil, createdUserID)
+	s.T().Logf("got user UUID: %v", createdUserID)
+
+	retrievedUserID, err := GetUserID(ctx, s.DB, username, password)
+	s.Require().NoError(err)
+	s.Equal(createdUserID, retrievedUserID)
+
+	_, err = NewUser(ctx, s.DB, username, password, false)
+	s.Require().Error(err)
+	s.ErrorIs(err, ErrAlreadyExists)
+
+	_, err = GetUserID(ctx, s.DB, "invalid-user", "invalid-password")
+	s.Require().Error(err)
+	s.ErrorIs(err, ErrNotFound)
 }
 
 func (s *BaseRepositoryTestSuite) SetupSuite() {
